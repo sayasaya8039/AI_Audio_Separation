@@ -13,9 +13,11 @@ from pathlib import Path
 from typing import Callable, Dict, Optional
 
 import numpy as np
+import soundfile as sf
 import torch
 import torchaudio
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
+
 
 
 @dataclass
@@ -82,7 +84,7 @@ class SeparationWorker(QThread):
             from demucs.pretrained import get_model
             from demucs.apply import apply_model
 
-            model = get_model("htdemucs")
+            model = get_model("htdemucs_ft")
             model.to(self.device)
             model.eval()
 
@@ -92,7 +94,14 @@ class SeparationWorker(QThread):
             self.progress.emit(20, "オーディオを読み込み中...")
 
             # オーディオを読み込み
-            waveform, sample_rate = torchaudio.load(self.file_path)
+            # soundfileで読み込み（torchcodec不要）
+            audio_np, sample_rate = sf.read(self.file_path, dtype="float32")
+            # (samples, channels) -> (channels, samples) に変換してTensorに
+            if audio_np.ndim == 1:
+                audio_np = audio_np.reshape(1, -1)
+            else:
+                audio_np = audio_np.T
+            waveform = torch.from_numpy(audio_np)
 
             # ステレオに変換（必要な場合）
             if waveform.shape[0] == 1:
@@ -114,9 +123,9 @@ class SeparationWorker(QThread):
             # バッチ次元を追加
             waveform = waveform.unsqueeze(0).to(self.device)
 
-            # 分離実行
+            # 分離実行（PyInstaller GUIではprogress=Falseにする必要あり）
             with torch.no_grad():
-                sources = apply_model(model, waveform, device=self.device, progress=True)
+                sources = apply_model(model, waveform, device=self.device, progress=False)
 
             if self._cancelled:
                 return

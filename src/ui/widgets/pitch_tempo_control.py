@@ -44,8 +44,8 @@ class PitchTempoControl(QFrame):
         pitch_layout.setSpacing(4)
 
         pitch_header = QHBoxLayout()
-        pitch_icon = QLabel("🎹")
-        pitch_icon.setStyleSheet("font-size: 18px;")
+        pitch_icon = QLabel("[P]")
+        pitch_icon.setStyleSheet("font-size: 14px; font-weight: bold;")
         pitch_label = QLabel("ピッチ")
         pitch_label.setStyleSheet("font-weight: bold;")
         pitch_header.addWidget(pitch_icon)
@@ -74,11 +74,14 @@ class PitchTempoControl(QFrame):
         pitch_range.setStyleSheet("color: #94A3B8; font-size: 11px;")
         pitch_layout.addWidget(pitch_range)
 
-        # リセットボタン
+        # リセットボタン（右寄せ用レイアウト）
+        pitch_reset_layout = QHBoxLayout()
+        pitch_reset_layout.addStretch()
         self._pitch_reset = QPushButton("リセット")
-        self._pitch_reset.setFixedWidth(60)
+        self._pitch_reset.setFixedSize(80, 32)
         self._pitch_reset.clicked.connect(lambda: self._pitch_slider.setValue(0))
-        pitch_layout.addWidget(self._pitch_reset, alignment=Qt.AlignmentFlag.AlignRight)
+        pitch_reset_layout.addWidget(self._pitch_reset)
+        pitch_layout.addLayout(pitch_reset_layout)
 
         layout.addLayout(pitch_layout, 1)
 
@@ -93,8 +96,8 @@ class PitchTempoControl(QFrame):
         tempo_layout.setSpacing(4)
 
         tempo_header = QHBoxLayout()
-        tempo_icon = QLabel("⏱️")
-        tempo_icon.setStyleSheet("font-size: 18px;")
+        tempo_icon = QLabel("[T]")
+        tempo_icon.setStyleSheet("font-size: 14px; font-weight: bold;")
         tempo_label = QLabel("テンポ")
         tempo_label.setStyleSheet("font-weight: bold;")
         tempo_header.addWidget(tempo_icon)
@@ -123,11 +126,14 @@ class PitchTempoControl(QFrame):
         tempo_range.setStyleSheet("color: #94A3B8; font-size: 11px;")
         tempo_layout.addWidget(tempo_range)
 
-        # リセットボタン
+        # リセットボタン（右寄せ用レイアウト）
+        tempo_reset_layout = QHBoxLayout()
+        tempo_reset_layout.addStretch()
         self._tempo_reset = QPushButton("リセット")
-        self._tempo_reset.setFixedWidth(60)
+        self._tempo_reset.setFixedSize(80, 32)
         self._tempo_reset.clicked.connect(lambda: self._tempo_slider.setValue(100))
-        tempo_layout.addWidget(self._tempo_reset, alignment=Qt.AlignmentFlag.AlignRight)
+        tempo_reset_layout.addWidget(self._tempo_reset)
+        tempo_layout.addLayout(tempo_reset_layout)
 
         layout.addLayout(tempo_layout, 1)
 

@@ -34,10 +34,10 @@ class StemControl(QFrame):
 
     # ステムの表示名とアイコン
     STEM_INFO = {
-        "vocals": ("Vocals", "🎤"),
-        "drums": ("Drums", "🥁"),
-        "bass": ("Bass", "🎸"),
-        "other": ("Other", "🎹"),
+        "vocals": ("Vocals", "[V]"),
+        "drums": ("Drums", "[D]"),
+        "bass": ("Bass", "[B]"),
+        "other": ("Other", "[O]"),
     }
 
     def __init__(
@@ -64,12 +64,12 @@ class StemControl(QFrame):
 
         # ステム名とアイコン
         display_name, icon = self.STEM_INFO.get(
-            self._stem_name, (self._stem_name.capitalize(), "🎵")
+            self._stem_name, (self._stem_name.capitalize(), "[*]")
         )
 
         header_layout = QHBoxLayout()
         icon_label = QLabel(icon)
-        icon_label.setStyleSheet("font-size: 24px;")
+        icon_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         name_label = QLabel(display_name)
         name_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         header_layout.addWidget(icon_label)

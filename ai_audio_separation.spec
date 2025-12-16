@@ -16,14 +16,24 @@ block_cipher = None
 # プロジェクトルート
 PROJECT_ROOT = Path(SPECPATH)
 
+import os
+
+# Demucsパッケージのパス
+demucs_path = None
+try:
+    import demucs
+    demucs_path = os.path.dirname(demucs.__file__)
+except ImportError:
+    pass
+
 a = Analysis(
     ['src/main.py'],
     pathex=[str(PROJECT_ROOT)],
     binaries=[],
     datas=[
-        # アイコンやリソースがあれば追加
-        # ('src/resources/icons', 'resources/icons'),
-    ],
+        # Demucsのデータファイル（必須）
+        (os.path.join(demucs_path, 'remote'), 'demucs/remote'),
+    ] if demucs_path else [],
     hiddenimports=[
         # PyTorch関連
         'torch',

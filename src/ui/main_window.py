@@ -7,8 +7,8 @@
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QDragEnterEvent, QDropEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QSize
+from PyQt6.QtGui import QAction, QDragEnterEvent, QDropEvent, QIcon, QPainter, QPixmap, QColor, QPen, QBrush
 from PyQt6.QtWidgets import (
     QFileDialog,
     QFrame,
@@ -29,6 +29,50 @@ from src.ui.waveform_view import WaveformView
 from src.ui.widgets.pitch_tempo_control import PitchTempoControl
 from src.ui.widgets.transport_bar import TransportBar
 from src.utils.file_utils import get_file_filter, is_supported_format
+
+def _create_moon_icon(size=32, color="#FFFFFF"):
+    """月アイコン（ダークモード用）"""
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    p = QPainter(pixmap)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    p.setPen(QPen(QColor(color), 2))
+    p.setBrush(QBrush(QColor(color)))
+    # 月の形
+    m = size // 5
+    p.drawEllipse(m, m, size - 2*m, size - 2*m)
+    # 右側を切り取る（暗い円で覆う）
+    p.setBrush(QBrush(QColor("#1E293B")))
+    p.setPen(Qt.PenStyle.NoPen)
+    p.drawEllipse(size//3, m-2, size - 2*m, size - 2*m)
+    p.end()
+    return QIcon(pixmap)
+
+def _create_sun_icon(size=32, color="#FFFFFF"):
+    """太陽アイコン（ライトモード用）"""
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    p = QPainter(pixmap)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    p.setPen(QPen(QColor(color), 2))
+    p.setBrush(QBrush(QColor(color)))
+    # 中心の円
+    cx, cy = size // 2, size // 2
+    r = size // 5
+    p.drawEllipse(cx - r, cy - r, r * 2, r * 2)
+    # 光線
+    import math
+    for i in range(8):
+        angle = i * math.pi / 4
+        x1 = cx + int((r + 3) * math.cos(angle))
+        y1 = cy + int((r + 3) * math.sin(angle))
+        x2 = cx + int((r + 7) * math.cos(angle))
+        y2 = cy + int((r + 7) * math.sin(angle))
+        p.drawLine(x1, y1, x2, y2)
+    p.end()
+    return QIcon(pixmap)
+
+
 
 
 class MainWindow(QMainWindow):
@@ -74,15 +118,18 @@ class MainWindow(QMainWindow):
         # ヘッダー（タイトル + テーマ切り替え）
         header_layout = QHBoxLayout()
 
-        title_label = QLabel("🎵 AI Audio Separation")
+        title_label = QLabel("AI Audio Separation")
         title_label.setStyleSheet("font-size: 24px; font-weight: bold;")
         header_layout.addWidget(title_label)
 
         header_layout.addStretch()
 
         # テーマ切り替えボタン
-        self._theme_btn = QPushButton("🌙")
+        self._moon_icon = _create_moon_icon()
+        self._sun_icon = _create_sun_icon()
+        self._theme_btn = QPushButton()
         self._theme_btn.setFixedSize(40, 40)
+        self._theme_btn.setIconSize(QSize(24, 24))
         self._theme_btn.setToolTip("テーマ切り替え")
         self._theme_btn.clicked.connect(self._toggle_theme)
         header_layout.addWidget(self._theme_btn)
@@ -126,11 +173,11 @@ class MainWindow(QMainWindow):
         # ボタンエリア
         button_layout = QHBoxLayout()
 
-        self._load_btn = QPushButton("📂 ファイルを開く")
+        self._load_btn = QPushButton("ファイルを開く")
         self._load_btn.setMinimumWidth(150)
         self._load_btn.clicked.connect(self._on_load_clicked)
 
-        self._export_btn = QPushButton("💾 エクスポート")
+        self._export_btn = QPushButton("エクスポート")
         self._export_btn.setMinimumWidth(150)
         self._export_btn.setEnabled(False)
         self._export_btn.clicked.connect(self.export_requested.emit)
@@ -142,7 +189,7 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(button_layout)
 
         # ドロップエリアのヒント
-        self._drop_hint = QLabel("🎵 音声ファイルをドラッグ&ドロップ、または「ファイルを開く」をクリック")
+        self._drop_hint = QLabel("音声ファイルをドラッグ&ドロップ、または「ファイルを開く」をクリック")
         self._drop_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._drop_hint.setStyleSheet("color: #64748B; padding: 40px;")
         main_layout.addWidget(self._drop_hint)
@@ -203,12 +250,12 @@ class MainWindow(QMainWindow):
         """テーマを適用"""
         theme = self._theme_manager.current_theme
         self.setStyleSheet(get_stylesheet(theme))
-        self._theme_btn.setText("☀️" if theme == Theme.DARK else "🌙")
+        self._theme_btn.setIcon(self._moon_icon if theme == Theme.DARK else self._sun_icon)
 
     def _toggle_theme(self) -> None:
         """テーマを切り替え"""
         new_theme = self._theme_manager.toggle_theme()
-        self._theme_btn.setText("☀️" if new_theme == Theme.DARK else "🌙")
+        self._theme_btn.setIcon(self._moon_icon if new_theme == Theme.DARK else self._sun_icon)
         self.waveform_view.update_theme()
 
     def _on_load_clicked(self) -> None:
